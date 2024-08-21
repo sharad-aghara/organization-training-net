@@ -1,0 +1,63 @@
+﻿@model WebApplication1.Models.Training
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+<hr />
+<div>
+    <h4>Training</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.TrainingDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TrainingDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Organization)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Organization.Name)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PlaceOfTraining)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PlaceOfTraining)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PurposeOfTraining)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PurposeOfTraining)
+        </dd>
+    </dl>
+</div>
+
+<hr />
+
+<div>
+    <h4>Participants</h4>
+    <hr/>
+    @if (Model.TrainingEmployees.Any())
+    {
+        <ol>
+            @foreach (var trainingEmployee in Model.TrainingEmployees)
+            {
+                <li>@trainingEmployee.Employee.Name</li>
+            }
+        </ol>
+    }
+    else
+    {
+        <p>No employees associated with this training.</p>
+    }
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

@@ -1,0 +1,110 @@
+﻿@model WebApplication1.Models.Training
+
+@{
+    ViewData["Title"] = "Create";
+    var today = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<h1>Create</h1>
+
+<h4>Training</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group my-2">
+                <label asp-for="OrganizationId" class="control-label">Organization</label>
+                <select id="organizationSelect" name="OrganizationId" class="form-control">
+                    <option value="">Select Organization</option>
+                    @foreach (var org in ViewData["OrganizationId"] as SelectList)
+                    {
+                        <option value="@org.Value">@org.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="OrganizationId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group my-2">
+                <label asp-for="TrainingDate" class="control-label"></label>
+                <input asp-for="TrainingDate" class="form-control" type="date" min="@today" />
+                <span asp-validation-for="TrainingDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group my-2">
+                <label for="employeeSelect">Employees</label>
+                <select id="employeeSelect" name="EmployeeIds" multiple="multiple" class="form-control">
+                    <option value="">Select Employee</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+
+            @* <div class="form-group">
+                <label asp-for="PlaceOfTraining" class="control-label"></label>
+                <input asp-for="PlaceOfTraining" class="form-control" />
+                <span asp-validation-for="PlaceOfTraining" class="text-danger"></span>
+            </div> *@
+
+            <div class="form-group my-2">
+                <label asp-for="PlaceOfTraining" class="control-label"></label>
+                <select asp-for="PlaceOfTraining" class="form-control" >
+                    <option value="">Select Venue</option>
+                    <option value="Room 1">Room 1</option>
+                    <option value="Room 2">Room 2</option>
+                    <option value="Room 3">Room 3</option>
+                    <option value="Room 4">Room 4</option>
+                </select>
+                <span asp-validation-for="PlaceOfTraining" class="text-danger"></span>
+            </div>
+
+            <div class="form-group my-2">
+                <label asp-for="PurposeOfTraining" class="control-label"></label>
+                <input asp-for="PurposeOfTraining" class="form-control" />
+                <span asp-validation-for="PurposeOfTraining" class="text-danger"></span>
+            </div>
+            <div class="form-group my-2">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#organizationSelect').change(function() {
+            var orgId = $(this).val();
+            if (orgId) {
+                $.getJSON('@Url.Action("GetEmployeesFromOrganization")', { organizationId: orgId }, function (data) {
+                    var $employeeSelect = $('#employeeSelect');
+                    $employeeSelect.empty();
+                    $employeeSelect.append('<option value="">Select Employee</option>');
+                    $.each(data, function(index, employee) {
+                        $employeeSelect.append($('<option>', {
+                            value: employee.id,
+                            text: employee.name
+                        }));
+                    });
+                });
+            } else {
+                $('#employeeSelect').empty().append('<option value="">No Employee</option>');
+            }
+        });
+
+         $('#trainingForm').on('submit', function() {
+            // Log selected employee IDs for debugging
+            var selectedEmployeeIds = $('#employeeSelect').val();
+            console.log('Selected Employee IDs:', selectedEmployeeIds);
+        });
+
+    });
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
