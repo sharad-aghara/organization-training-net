@@ -34,6 +34,7 @@ namespace WebApplication1.Controllers
             }
 
             var organization = await _context.Organizations
+                .Include(o => o.Training)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (organization == null)
             {
