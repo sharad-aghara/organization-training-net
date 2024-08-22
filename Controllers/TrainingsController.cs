@@ -40,7 +40,7 @@ namespace WebApplication1.Controllers
             var training = await _context.Trainings
                 .Include(t => t.Organization)
                 .Include(t => t.TrainingEmployees)
-                .ThenInclude(te => te.Employee)
+                    .ThenInclude(te => te.Employee)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
 
@@ -99,12 +99,14 @@ namespace WebApplication1.Controllers
                             _context.Add(trainingEmployee);
 
                             Console.WriteLine("trainingEmployee: ", trainingEmployee);
-                        } else
+                        }
+                        else
                         {
                             Console.WriteLine("Employee is emplty");
                         }
                     }
-                } else
+                }
+                else
                 {
 
                     Console.WriteLine("Model State is not valid");
@@ -124,6 +126,7 @@ namespace WebApplication1.Controllers
             return View(training);
         }
 
+
         // GET: Trainings/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -131,8 +134,6 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-
-            //var training = await _context.Trainings.FindAsync(id);
 
             var training = await _context.Trainings
                 .Include(t => t.Organization)
@@ -144,19 +145,30 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            //ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", training.OrganizationId);
+
+            ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", training.OrganizationId);
+
+            // Get the employees of the selected organization
+            var organizationEmployees = await _context.Employees
+                .Where(e => e.OrganizationId == training.OrganizationId)
+                .ToListAsync();
+
+            // Set the ViewData to use in the view
+            ViewData["Employees"] = new SelectList(organizationEmployees, "Id", "Name");
+
+            // Populate the selected employee IDs
+            ViewData["SelectedEmployeeIds"] = training.TrainingEmployees.Select(te => te.EmployeeId).ToArray();
+
+            // Org Name
             ViewBag.OrganizationName = _context.Organizations
                 .Where(o => o.Id == training.OrganizationId)
                 .Select(o => o.Name)
                 .FirstOrDefault();
 
-            ViewData["SelectedEmployeeIds"] = training.TrainingEmployees.Select(te => te.EmployeeId).ToArray();
             return View(training);
         }
 
         // POST: Trainings/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,TrainingDate,OrganizationId,PlaceOfTraining,PurposeOfTraining")] Training training, int[] employeeIds)
@@ -178,22 +190,30 @@ namespace WebApplication1.Controllers
                     var existingTrainingEmployees = _context.TrainingEmployees
                         .Where(te => te.TrainingId == training.Id);
                     _context.TrainingEmployees.RemoveRange(existingTrainingEmployees);
+                    await _context.SaveChangesAsync(); // Save changes after removal
 
+                    Console.WriteLine("Old TrainingEmployee entries are deleted.");
+
+                    Console.WriteLine("EmpId Lengthhhh: ", employeeIds.Length);
                     // Add new TrainingEmployee records
-                    if (employeeIds != null)
+                    foreach (var employeeId in employeeIds)
                     {
-                        foreach (var employeeId in employeeIds)
+                        Console.WriteLine("EmpIds: ", employeeId);
+                        var employee = await _context.Employees.FindAsync(employeeId);
+                        if (employee != null)
                         {
+                            Console.WriteLine("Into ifff");
                             var trainingEmployee = new TrainingEmployee
                             {
                                 TrainingId = training.Id,
                                 EmployeeId = employeeId
                             };
-                            _context.Add(trainingEmployee);
+                            _context.TrainingEmployees.Add(trainingEmployee);
                         }
                     }
 
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(); // Save changes after adding new records
+                    Console.WriteLine("New TrainingEmployee entries are saved.");
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -206,11 +226,12 @@ namespace WebApplication1.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
+
             ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", training.OrganizationId);
-            ViewData["SelectedEmployeeIds"] = employeeIds;
-            return View(training);
+            ViewData["SelectedEmployeeIds"] = training.TrainingEmployees.Select(te => te.EmployeeId).ToArray();
+
+            return RedirectToAction(nameof(Details), new { id = training.Id });
         }
 
 
@@ -253,18 +274,38 @@ namespace WebApplication1.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
+        //
         private bool TrainingExists(int id)
         {
             return _context.Trainings.Any(e => e.Id == id);
         }
 
+
         // Get Employees after selecting Organization
         public IActionResult GetEmployeesFromOrganization(int organizationId) { 
             var employees = _context.Employees
                 .Where(e => e.OrganizationId == organizationId)
+                .Select(e => new { e.Id, e.Name })
                 .ToList();
 
             return Json(employees);
         }
+
+
+        //
+        public async Task<IEnumerable<Employee>> GetAvailableEmployees(int organizationId, DateOnly trainingDate)
+        {
+            var engagedEmployeeIds = await _context.TrainingEmployees
+                .Where(te => te.Training.TrainingDate == trainingDate)
+                .Select(te => te.EmployeeId)
+                .ToListAsync();
+
+            return await _context.Employees
+                .Where(e => e.OrganizationId == organizationId && !engagedEmployeeIds.Contains(e.Id))
+                .ToListAsync();
+        }
+
+
     }
 }
