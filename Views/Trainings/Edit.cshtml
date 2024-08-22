@@ -2,6 +2,12 @@
 
 @{
     ViewData["Title"] = "Edit";
+    var employees = ViewData["Employees"] as List<WebApplication1.Models.Employee>;
+    if (employees == null)
+    {
+        employees = new List<WebApplication1.Models.Employee>(); // Provide a default value if null
+    }
+    var selectedEmployeeIds = ViewData["SelectedEmployeeIds"] as int[];
 }
 
 <h1>Edit</h1>
@@ -10,36 +16,24 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" id="trainingForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-
-            @* <div class="form-group">
-                <label asp-for="OrganizationId" class="control-label">Organization</label>
-                <select asp-for="OrganizationId" class="form-control" asp-items="ViewBag.OrganizationId"></select>
-                <span asp-validation-for="OrganizationId" class="text-danger"></span>
-            </div> *@
 
             <div class="form-group my-2">
                 <label asp-for="OrganizationId" class="control-label">Organization</label>
                 <p class="form-control-static my-2 fw-bold">@ViewBag.OrganizationName</p>
-                <input type="hidden" asp-for="OrganizationId" />
+                <input type="hidden" asp-for="OrganizationId" id="hiddenOrganizationId" />
                 <span asp-validation-for="OrganizationId" class="text-danger"></span>
             </div>
 
-            <div class="form-group  my-2">
+            <div class="form-group my-2">
                 <label asp-for="TrainingDate" class="control-label"></label>
                 <input asp-for="TrainingDate" class="form-control" type="date" />
                 <span asp-validation-for="TrainingDate" class="text-danger"></span>
             </div>
 
-            @* <div class="form-group">
-                <label asp-for="PlaceOfTraining" class="control-label"></label>
-                <input asp-for="PlaceOfTraining" class="form-control" />
-                <span asp-validation-for="PlaceOfTraining" class="text-danger"></span>
-            </div> *@
-
-            <div class="form-group  my-2">
+            <div class="form-group my-2">
                 <label asp-for="PlaceOfTraining" class="control-label"></label>
                 <select asp-for="PlaceOfTraining" class="form-control">
                     <option value="Room 1">Room 1</option>
@@ -50,22 +44,79 @@
                 <span asp-validation-for="PlaceOfTraining" class="text-danger"></span>
             </div>
 
-            <div class="form-group  my-2">
+            <div class="form-group my-2">
                 <label asp-for="PurposeOfTraining" class="control-label"></label>
                 <input asp-for="PurposeOfTraining" class="form-control" />
                 <span asp-validation-for="PurposeOfTraining" class="text-danger"></span>
             </div>
-            <div class="form-group  my-2">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="form-group my-2">
+                <label for="employeeSelect">Employees</label>
+                <select id="employeeSelect" name="EmployeeIds" multiple="multiple" class="form-control">
+                    <option value="">Select Employees</option>
+                    @foreach (var employee in employees)
+                    {
+                        <option value="@employee.Id" )>@employee.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-6 my-2">
+                    <input type="submit" value="Save" class="btn btn-primary w-100" />
+                </div>
+                <div class="col-6 my-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">Back to List</a>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var organizationId = $('#hiddenOrganizationId').val();
+
+        // Load employees when the organization is selected
+        if (organizationId) {
+            loadEmployees(organizationId);
+        }
+
+        // Function to load employees based on organization ID
+        function loadEmployees(organizationId) {
+            $.getJSON('@Url.Action("GetEmployeesFromOrganization")', { organizationId: organizationId }, function (data) {
+                var $employeeSelect = $('#employeeSelect');
+                $employeeSelect.empty();
+                $.each(data, function (index, employee) {
+                    $employeeSelect.append($('<option>', {
+                        value: employee.id,
+                        text: employee.name,
+                        selected: employee.selected
+                    }));
+                });
+            }).fail(function () {
+                console.error("Error fetching employees");
+            });
+        }
+
+        // Handle organization change
+        $('#organizationSelect').change(function () {
+            var selectedOrgId = $(this).val();
+            if (selectedOrgId) {
+                loadEmployees(selectedOrgId);
+            }
+        });
+
+         $('#trainingForm').on('submit', function() {
+            // Log selected employee IDs for debugging
+            var selectedEmployeeIds = $('#employeeSelect').val();
+            console.log('Selected Employee IDs:', selectedEmployeeIds);
+        });
+    });
+</script>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

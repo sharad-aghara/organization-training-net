@@ -16,8 +16,8 @@
             
             <div class="form-group my-2">
                 <label asp-for="OrganizationId" class="control-label">Organization</label>
-                <select id="organizationSelect" name="OrganizationId" class="form-control">
-                    <option value="">Select Organization</option>
+                <select id="organizationSelect" name="OrganizationId" class="form-control" >
+                    <option value="" disabled selected>Select Organization</option>
                     @foreach (var org in ViewData["OrganizationId"] as SelectList)
                     {
                         <option value="@org.Value">@org.Text</option>
@@ -28,28 +28,21 @@
 
             <div class="form-group my-2">
                 <label asp-for="TrainingDate" class="control-label"></label>
-                <input asp-for="TrainingDate" class="form-control" type="date" min="@today" />
+                <input asp-for="TrainingDate" class="form-control" type="date" min="@today" id="trainingDate"/>
                 <span asp-validation-for="TrainingDate" class="text-danger"></span>
             </div>
 
             <div class="form-group my-2">
                 <label for="employeeSelect">Employees</label>
                 <select id="employeeSelect" name="EmployeeIds" multiple="multiple" class="form-control">
-                    <option value="">Select Employee</option>
-                    <!-- Options will be populated dynamically -->
+                    <option value="" disabled selected>Select Employees</option>
                 </select>
             </div>
-
-            @* <div class="form-group">
-                <label asp-for="PlaceOfTraining" class="control-label"></label>
-                <input asp-for="PlaceOfTraining" class="form-control" />
-                <span asp-validation-for="PlaceOfTraining" class="text-danger"></span>
-            </div> *@
 
             <div class="form-group my-2">
                 <label asp-for="PlaceOfTraining" class="control-label"></label>
                 <select asp-for="PlaceOfTraining" class="form-control" >
-                    <option value="">Select Venue</option>
+                    <option value="" disabled selected>Select Venue</option>
                     <option value="Room 1">Room 1</option>
                     <option value="Room 2">Room 2</option>
                     <option value="Room 3">Room 3</option>
@@ -63,6 +56,7 @@
                 <input asp-for="PurposeOfTraining" class="form-control" />
                 <span asp-validation-for="PurposeOfTraining" class="text-danger"></span>
             </div>
+
             <div class="form-group my-2">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
@@ -77,10 +71,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#organizationSelect').change(function() {
-            var orgId = $(this).val();
-            if (orgId) {
-                $.getJSON('@Url.Action("GetEmployeesFromOrganization")', { organizationId: orgId }, function (data) {
+        $('#organizationSelect, #trainingDate').change(function() {
+            var orgId = $('#organizationSelect').val();
+            var trainingDate = $('#trainingDate').val();
+
+            if (orgId && trainingDate) {
+                $.getJSON('@Url.Action("GetAvailableEmployees")', { organizationId: orgId, trainingDate: trainingDate }, function (data) {
                     var $employeeSelect = $('#employeeSelect');
                     $employeeSelect.empty();
                     $employeeSelect.append('<option value="">Select Employee</option>');
@@ -96,14 +92,14 @@
             }
         });
 
-         $('#trainingForm').on('submit', function() {
+        $('#trainingForm').on('submit', function() {
             // Log selected employee IDs for debugging
             var selectedEmployeeIds = $('#employeeSelect').val();
             console.log('Selected Employee IDs:', selectedEmployeeIds);
         });
-
     });
 </script>
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

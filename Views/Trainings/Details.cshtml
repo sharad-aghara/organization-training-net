@@ -41,15 +41,24 @@
 
 <div>
     <h4>Participants</h4>
-    <hr/>
+    <hr />
     @if (Model.TrainingEmployees.Any())
     {
-        <ol>
-            @foreach (var trainingEmployee in Model.TrainingEmployees)
-            {
-                <li>@trainingEmployee.Employee.Name</li>
-            }
-        </ol>
+        <table class="table table-striped" id="TableOne">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trainingEmployee in Model.TrainingEmployees)
+                {
+                    <tr>
+                        <td>@trainingEmployee.Employee.Name</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
     else
     {
@@ -58,6 +67,6 @@
 </div>
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-primary">Edit</a> |
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

@@ -31,15 +31,25 @@
     <hr />
     @if (Model.TrainingEmployees != null && Model.TrainingEmployees.Any())
     {
-        <ol>
-            @foreach (var trainingEmployee in Model.TrainingEmployees)
-            {
-                <li>
-                    @trainingEmployee.Training.TrainingDate - @trainingEmployee.Training.PurposeOfTraining - @trainingEmployee.Training.PlaceOfTraining
-                    <!-- Display other properties of Training as needed -->
-                </li>
-            }
-        </ol>
+        <table class="table table-striped" id="TableOne">
+            <thead>
+                <tr>
+                    <th>Training Date</th>
+                    <th>Purpose of Training</th>
+                    <th>Place of Training</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trainingEmployee in Model.TrainingEmployees)
+                {
+                    <tr>
+                        <td>@trainingEmployee.Training.TrainingDate.ToString("dd/MM/yyyy")</td>
+                        <td>@trainingEmployee.Training.PurposeOfTraining</td>
+                        <td>@trainingEmployee.Training.PlaceOfTraining</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
     else
     {
@@ -49,6 +59,6 @@
 <br />
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-primary">Edit</a> |
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>
