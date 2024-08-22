@@ -5,7 +5,7 @@
 }
 
 <h1>Details</h1>
-
+<br />
 <div>
     <h4>Employee</h4>
     <hr />
@@ -24,6 +24,30 @@
         </dd>
     </dl>
 </div>
+<br />
+
+<div>
+    <h2>Trainings</h2>
+    <hr />
+    @if (Model.TrainingEmployees != null && Model.TrainingEmployees.Any())
+    {
+        <ol>
+            @foreach (var trainingEmployee in Model.TrainingEmployees)
+            {
+                <li>
+                    @trainingEmployee.Training.TrainingDate - @trainingEmployee.Training.PurposeOfTraining - @trainingEmployee.Training.PlaceOfTraining
+                    <!-- Display other properties of Training as needed -->
+                </li>
+            }
+        </ol>
+    }
+    else
+    {
+        <p>No trainings assigned to this employee.</p>
+    }
+</div>
+<br />
+
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>

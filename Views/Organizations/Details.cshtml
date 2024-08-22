@@ -7,6 +7,7 @@
 <h1>Details</h1>
 
 <div>
+    <br />
     <h4>Organization</h4>
     <hr />
     <dl class="row">
@@ -18,6 +19,30 @@
         </dd>
     </dl>
 </div>
+<br />
+
+<div>
+    <h4>Trainings</h4>
+    <hr />
+    @if (Model.Training != null && Model.Training.Any())
+    {
+        <ol>
+            @foreach (var training in Model.Training)
+            {
+                <li>
+                    @training.TrainingDate - @training.PlaceOfTraining
+                    <!-- Display other properties of Training as needed -->
+                </li>
+            }
+        </ol>
+    }
+    else
+    {
+        <p>No trainings available for this organization.</p>
+    }
+</div>
+<br />
+
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>

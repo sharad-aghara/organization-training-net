@@ -36,6 +36,8 @@ namespace WebApplication1.Controllers
 
             var employee = await _context.Employees
                 .Include(e => e.Organization)
+                .Include(e => e.TrainingEmployees)
+                    .ThenInclude(te => te.Training)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (employee == null)
             {
