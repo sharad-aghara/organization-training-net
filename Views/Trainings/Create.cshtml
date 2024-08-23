@@ -32,12 +32,40 @@
                 <span asp-validation-for="TrainingDate" class="text-danger"></span>
             </div>
 
-            <div class="form-group my-2">
+            <div>
+                <ejs-calendar id="calendar"></ejs-calendar>
+            </div>
+
+            @* <div class="form-group my-2">
                 <label for="employeeSelect">Employees</label>
                 <select id="employeeSelect" name="EmployeeIds" multiple="multiple" class="form-control">
                     <option value="" disabled selected>Select Employees</option>
                 </select>
+            </div> *@
+
+            @* <div class="form-group my-2">
+                <label for="employeeSelect">Employees</label>
+                <ejs-multiselect id="employeeSelect" name="EmployeeIds" dataSource="@ViewBag.data" mode="CheckBox" placeholder="Select Employees" [value]="selectedEmployeeIds">
+                    <e-multiselect-fields value="Id" text="Name"></e-multiselect-fields>
+                </ejs-multiselect>
+            </div> *@
+
+            @* multi select checkbox *@
+            <div class="form-group my-2">
+                <label for="employeeSelect">Employees</label>
+                <div class="multiselect">
+                    <div class="selectBox" onclick="showCheckboxes()">
+                        <select>
+                            <option>Select Employees</option>
+                        </select>
+                        <div class="overSelect"></div>
+                    </div>
+                    <div id="checkboxes">
+                        <!-- Checkboxes will be dynamically added here -->
+                    </div>
+                </div>
             </div>
+
 
             <div class="form-group my-2">
                 <label asp-for="PlaceOfTraining" class="control-label"></label>
@@ -57,18 +85,20 @@
                 <span asp-validation-for="PurposeOfTraining" class="text-danger"></span>
             </div>
 
-            <div class="form-group my-2">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="row">
+                <div class="col-6 my-2">
+                    <input type="submit" value="Create" class="btn btn-primary w-100" />
+                </div>
+                <div class="col-6 my-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">Back to List</a>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#organizationSelect, #trainingDate').change(function() {
@@ -76,29 +106,55 @@
             var trainingDate = $('#trainingDate').val();
 
             if (orgId && trainingDate) {
-                $.getJSON('@Url.Action("GetAvailableEmployees")', { organizationId: orgId, trainingDate: trainingDate }, function (data) {
-                    var $employeeSelect = $('#employeeSelect');
-                    $employeeSelect.empty();
-                    $employeeSelect.append('<option value="">Select Employee</option>');
-                    $.each(data, function(index, employee) {
-                        $employeeSelect.append($('<option>', {
-                            value: employee.id,
-                            text: employee.name
-                        }));
-                    });
+                $.getJSON('@Url.Action("GetAvailableEmployees")', { organizationId: orgId, trainingDate: trainingDate }, function(data) {
+                    var $checkboxes = $('#checkboxes');
+                    $checkboxes.empty();
+
+                    if (data.length > 0) {
+                        $.each(data, function(index, employee) {
+                            $checkboxes.append($('<label>', {
+                                for: employee.id
+                            }).append(
+                                $('<input>', {
+                                    type: 'checkbox',
+                                    value: employee.id,
+                                    id: employee.id,
+                                    name: 'employeeIds'
+                                })
+                            ).append(employee.name));
+                        });
+                    } else {
+                        $checkboxes.append('<p>No Employees available</p>');
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.log("AJAX request failed:", textStatus, errorThrown);
                 });
             } else {
-                $('#employeeSelect').empty().append('<option value="">No Employee</option>');
+                $('#checkboxes').empty();
             }
         });
 
-        $('#trainingForm').on('submit', function() {
-            // Log selected employee IDs for debugging
-            var selectedEmployeeIds = $('#employeeSelect').val();
-            console.log('Selected Employee IDs:', selectedEmployeeIds);
+        // Close the checkboxes dropdown when clicking outside of it
+        $(document).click(function(event) {
+            var target = $(event.target);
+            if (!target.closest('.multiselect').length) {
+                $('#checkboxes').hide();
+            }
+        });
+
+        // Show/hide the checkboxes dropdown
+        $('.selectBox').click(function(event) {
+            var $checkboxes = $('#checkboxes');
+            if ($checkboxes.is(':visible')) {
+                $checkboxes.hide();
+            } else {
+                $checkboxes.show();
+                event.stopPropagation(); // Prevents event from propagating to document click
+            }
         });
     });
 </script>
+
 
 
 @section Scripts {

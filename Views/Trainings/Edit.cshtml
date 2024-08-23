@@ -1,13 +1,14 @@
 ﻿@model WebApplication1.Models.Training
+@using Newtonsoft.Json
 
 @{
     ViewData["Title"] = "Edit";
-    var employees = ViewData["Employees"] as List<WebApplication1.Models.Employee>;
-    if (employees == null)
-    {
-        employees = new List<WebApplication1.Models.Employee>(); // Provide a default value if null
-    }
-    var selectedEmployeeIds = ViewData["SelectedEmployeeIds"] as int[];
+    // var employees = ViewData["Employees"] as List<WebApplication1.Models.Employee>;
+    // if (employees == null)
+    // {
+    //     employees = new List<WebApplication1.Models.Employee>(); // Provide a default value if null
+    // }
+    // var selectedEmployeeIds = ViewData["SelectedEmployeeIds"] as int[];
 }
 
 <h1>Edit</h1>
@@ -52,13 +53,17 @@
 
             <div class="form-group my-2">
                 <label for="employeeSelect">Employees</label>
-                <select id="employeeSelect" name="EmployeeIds" multiple="multiple" class="form-control">
-                    <option value="">Select Employees</option>
-                    @foreach (var employee in employees)
-                    {
-                        <option value="@employee.Id" )>@employee.Name</option>
-                    }
-                </select>
+                <div class="multiselect">
+                    <div class="selectBox" onclick="showCheckboxes()">
+                        <select>
+                            <option>Select Employees</option>
+                        </select>
+                        <div class="overSelect"></div>
+                    </div>
+                    <div id="checkboxes">
+                        <!-- Checkboxes will be dynamically added here -->
+                    </div>
+                </div>
             </div>
 
             <div class="row">
@@ -74,35 +79,45 @@
 </div>
 
 
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
         var organizationId = $('#hiddenOrganizationId').val();
+        var selectedEmployeeIds = @Html.Raw(JsonConvert.SerializeObject(ViewData["SelectedEmployeeIds"]));
 
-        // Load employees when the organization is selected
         if (organizationId) {
             loadEmployees(organizationId);
         }
 
-        // Function to load employees based on organization ID
         function loadEmployees(organizationId) {
             $.getJSON('@Url.Action("GetEmployeesFromOrganization")', { organizationId: organizationId }, function (data) {
-                var $employeeSelect = $('#employeeSelect');
-                $employeeSelect.empty();
-                $.each(data, function (index, employee) {
-                    $employeeSelect.append($('<option>', {
-                        value: employee.id,
-                        text: employee.name,
-                        selected: employee.selected
-                    }));
-                });
+                var $checkboxes = $('#checkboxes');
+                $checkboxes.empty();
+                
+                if(data.length > 0) {
+                    $.each(data, function (index, employee) {
+                        var isChecked = selectedEmployeeIds.includes(employee.id);
+                        $checkboxes.append($('<label>', {
+                            for: employee.id
+                        }).append(
+                            $('<input>', {
+                                type: 'checkbox',
+                                value: employee.id,
+                                id: employee.id,
+                                name: 'employeeIds', // This name should match the form field's name for POST data
+                                checked: isChecked
+                            })
+                        ).append(employee.name));
+                    });
+                } else {
+                    $checkboxes.append('<p>No Employees available</p>');
+                }
+
             }).fail(function () {
                 console.error("Error fetching employees");
             });
         }
 
-        // Handle organization change
         $('#organizationSelect').change(function () {
             var selectedOrgId = $(this).val();
             if (selectedOrgId) {
@@ -110,13 +125,28 @@
             }
         });
 
-         $('#trainingForm').on('submit', function() {
+        $('#trainingForm').on('submit', function () {
             // Log selected employee IDs for debugging
-            var selectedEmployeeIds = $('#employeeSelect').val();
+            var selectedEmployeeIds = $('#checkboxes input:checked').map(function () {
+                return this.value;
+            }).get();
             console.log('Selected Employee IDs:', selectedEmployeeIds);
         });
     });
+
+    function showCheckboxes() {
+        var checkboxes = document.getElementById("checkboxes");
+        checkboxes.style.display = checkboxes.style.display === "block" ? "none" : "block";
+    }
+
+    $(document).click(function(event) {
+            var target = $(event.target);
+            if (!target.closest('.multiselect').length) {
+                $('#checkboxes').hide();
+            }
+        });
 </script>
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
