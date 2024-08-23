@@ -154,16 +154,10 @@ namespace WebApplication1.Controllers
                 .ToListAsync();
 
             // Set the ViewData to use in the view
-            ViewData["Employees"] = new SelectList(organizationEmployees, "Id", "Name");
+            ViewData["Employees"] = organizationEmployees;
 
             // Populate the selected employee IDs
             ViewData["SelectedEmployeeIds"] = training.TrainingEmployees.Select(te => te.EmployeeId).ToArray();
-
-            // Org Name
-            ViewBag.OrganizationName = _context.Organizations
-                .Where(o => o.Id == training.OrganizationId)
-                .Select(o => o.Name)
-                .FirstOrDefault();
 
             return View(training);
         }
@@ -192,28 +186,18 @@ namespace WebApplication1.Controllers
                     _context.TrainingEmployees.RemoveRange(existingTrainingEmployees);
                     await _context.SaveChangesAsync(); // Save changes after removal
 
-                    Console.WriteLine("Old TrainingEmployee entries are deleted.");
-
-                    Console.WriteLine("EmpId Lengthhhh: ", employeeIds.Length);
                     // Add new TrainingEmployee records
                     foreach (var employeeId in employeeIds)
                     {
-                        Console.WriteLine("EmpIds: ", employeeId);
-                        var employee = await _context.Employees.FindAsync(employeeId);
-                        if (employee != null)
+                        var trainingEmployee = new TrainingEmployee
                         {
-                            Console.WriteLine("Into ifff");
-                            var trainingEmployee = new TrainingEmployee
-                            {
-                                TrainingId = training.Id,
-                                EmployeeId = employeeId
-                            };
-                            _context.TrainingEmployees.Add(trainingEmployee);
-                        }
+                            TrainingId = training.Id,
+                            EmployeeId = employeeId
+                        };
+                        _context.TrainingEmployees.Add(trainingEmployee);
                     }
 
                     await _context.SaveChangesAsync(); // Save changes after adding new records
-                    Console.WriteLine("New TrainingEmployee entries are saved.");
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -226,13 +210,15 @@ namespace WebApplication1.Controllers
                         throw;
                     }
                 }
+                return RedirectToAction(nameof(Details), new { id = training.Id });
             }
 
             ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", training.OrganizationId);
-            ViewData["SelectedEmployeeIds"] = training.TrainingEmployees.Select(te => te.EmployeeId).ToArray();
+            ViewData["SelectedEmployeeIds"] = employeeIds;
 
-            return RedirectToAction(nameof(Details), new { id = training.Id });
+            return View(training);
         }
+
 
 
         // GET: Trainings/Delete/5
