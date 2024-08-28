@@ -45,6 +45,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Organizations/Create
+        [Route("Organizations/new")]
         public IActionResult Create()
         {
             return View();
