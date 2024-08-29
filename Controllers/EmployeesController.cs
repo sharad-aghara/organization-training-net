@@ -52,7 +52,6 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> Create()
         {
             var organization = await _organizationRepository.GetAllOrganizationsAsync();
-            //ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name");
             ViewData["OrganizationId"] = new SelectList(organization, "Id", "Name");
             return View();
         }
@@ -89,10 +88,6 @@ namespace WebApplication1.Controllers
 
             var organizationById = await _organizationRepository.GetOrganizationByIdAsync(employee.OrganizationId);
 
-            //ViewBag.OrganizationName = _context.Organizations
-            //    .Where(o => o.Id == employee.OrganizationId)
-            //    .Select(o => o.Name)
-            //    .FirstOrDefault();
             ViewBag.OrganizationName = organizationById?.Name;
 
             return View(employee);
