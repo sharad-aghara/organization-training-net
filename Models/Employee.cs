@@ -9,11 +9,13 @@ namespace WebApplication1.Models
         public int Id { get; set; }
 
         [Required]
-        [StringLength(100)]
+        [StringLength(50)]
+        [RegularExpression(@"^[A-Za-z][A-Za-z\s]*$", ErrorMessage = "Invalid Name")]
         public string Name { get; set; }
 
         // Foreign key to Organization
         //[ForeignKey("OrganizationId")]
+        [Required(ErrorMessage = "Please select an organization.")]
         public int OrganizationId { get; set; }
 
         // Navigation property for Organization

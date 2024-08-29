@@ -12,6 +12,7 @@ namespace WebApplication1.Models
         public DateOnly TrainingDate { get; set; }
 
         // Foreign key to Organization
+        [Required(ErrorMessage = "Please select an organization.")]
         public int OrganizationId { get; set; }
 
         // Navigation property for Organization
@@ -19,14 +20,16 @@ namespace WebApplication1.Models
         public Organization? Organization { get; set; }
 
         [Required]
-        [StringLength(200)]
+        [StringLength(20)]
         public string PlaceOfTraining { get; set; }
 
         [Required]
-        [StringLength(500)]
+        [StringLength(50)]
+        [RegularExpression(@"^[A-Za-z0-9][A-Za-z0-9\s-]*$", ErrorMessage = "Invalid Pattern")]
         public string PurposeOfTraining { get; set; }
 
         // Navigation property for related TrainingEmployee
+        [Required(ErrorMessage = "Please select an Employee.")]
         public ICollection<TrainingEmployee> TrainingEmployees { get; set; }
 
         // ctor

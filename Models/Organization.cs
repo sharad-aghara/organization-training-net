@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using WebApplication1.Helper;
 
 namespace WebApplication1.Models
 {
@@ -8,7 +9,8 @@ namespace WebApplication1.Models
         public int Id { get; set; }
 
         [Required]
-        [StringLength(100)]
+        [StringLength(50)]
+        [RegularExpression(@"^[A-Za-z0-9][A-Za-z0-9\s-]*$", ErrorMessage = "Invalid Name")]
         public string Name { get; set; }
 
         // Navigation property for related Employees
