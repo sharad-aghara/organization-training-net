@@ -1,19 +1,24 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
+using WebApplication1.Interfaces;
+using WebApplication1.Repository;
 using WebApplication1.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// ---------------------------------------------------------------------------------------------------------------------
-
+// -----------------------------------------------------------------------------------------------------------------
 var provider = builder.Services.BuildServiceProvider();
 var config = provider.GetRequiredService<IConfiguration>();
 // Inject ApplicationDbContext
 builder.Services.AddDbContext<AppliactionDbContext>(item => item.UseSqlServer(config.GetConnectionString("test")));
+// ----------------------------------------------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------------------------------------------------
+// add Repository scope
+builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<ITrainingRepository, TrainingRepository>();
 
 builder.Services.AddScoped<EmployeeService>();
 
