@@ -16,8 +16,8 @@
             
             <div class="form-group my-2">
                 <label asp-for="OrganizationId" class="control-label">Organization</label>
-                <select id="organizationSelect" name="OrganizationId" class="form-control" >
-                    <option value="" disabled selected>Select Organization</option>
+                <select asp-for="OrganizationId" id="organizationSelect" name="OrganizationId" class="form-control" >
+                    <option value="" hidden disabled selected>Select Organization</option>
                     @foreach (var org in ViewData["OrganizationId"] as SelectList)
                     {
                         <option value="@org.Value">@org.Text</option>
@@ -55,8 +55,8 @@
                 <label for="employeeSelect">Employees</label>
                 <div class="multiselect">
                     <div class="selectBox" onclick="showCheckboxes()">
-                        <select>
-                            <option>Select Employees</option>
+                        <select for="TrainingEmployees">
+                            <option hidden disabled selected>Select Employees</option>
                         </select>
                         <div class="overSelect"></div>
                     </div>
@@ -64,13 +64,14 @@
                         <!-- Checkboxes will be dynamically added here -->
                     </div>
                 </div>
+                <span asp-validation-for="TrainingEmployees" class="text-danger"></span>
             </div>
 
 
             <div class="form-group my-2">
                 <label asp-for="PlaceOfTraining" class="control-label"></label>
                 <select asp-for="PlaceOfTraining" class="form-control" >
-                    <option value="" disabled selected>Select Venue</option>
+                    <option value="" hidden disabled selected>Select Venue</option>
                     <option value="Room 1">Room 1</option>
                     <option value="Room 2">Room 2</option>
                     <option value="Room 3">Room 3</option>
