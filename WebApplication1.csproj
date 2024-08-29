@@ -7,12 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Helper\**" />
     <Compile Remove="NewFolder\**" />
     <Compile Remove="Service\**" />
+    <Content Remove="Helper\**" />
     <Content Remove="NewFolder\**" />
     <Content Remove="Service\**" />
+    <EmbeddedResource Remove="Helper\**" />
     <EmbeddedResource Remove="NewFolder\**" />
     <EmbeddedResource Remove="Service\**" />
+    <None Remove="Helper\**" />
     <None Remove="NewFolder\**" />
     <None Remove="Service\**" />
   </ItemGroup>
