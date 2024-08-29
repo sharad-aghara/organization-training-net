@@ -6,23 +6,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
+using WebApplication1.Interfaces;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
     public class OrganizationsController : Controller
     {
-        private readonly AppliactionDbContext _context;
+        private readonly IOrganizationRepository _organizationRepository;
 
-        public OrganizationsController(AppliactionDbContext context)
+        public OrganizationsController(IOrganizationRepository organizationRepository)
         {
-            _context = context;
+            _organizationRepository = organizationRepository;
         }
 
         // GET: Organizations
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Organizations.ToListAsync());
+            var organizations = await _organizationRepository.GetAllOrganizationsAsync();
+            return View(organizations);
         }
 
         // GET: Organizations/Details/5
@@ -33,9 +35,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var organization = await _context.Organizations
-                .Include(o => o.Training)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var organization = await _organizationRepository.GetOrganizationWithDetailsByIdAsync(id.Value);
             if (organization == null)
             {
                 return NotFound();
@@ -45,23 +45,19 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Organizations/Create
-        [Route("Organizations/new")]
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: Organizations/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Organization organization)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(organization);
-                await _context.SaveChangesAsync();
+                await _organizationRepository.AddOrganizationAsync(organization);
                 return RedirectToAction(nameof(Index));
             }
             return View(organization);
@@ -75,7 +71,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var organization = await _context.Organizations.FindAsync(id);
+            var organization = await _organizationRepository.GetOrganizationByIdAsync(id.Value);
             if (organization == null)
             {
                 return NotFound();
@@ -84,8 +80,6 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Organizations/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Organization organization)
@@ -99,12 +93,11 @@ namespace WebApplication1.Controllers
             {
                 try
                 {
-                    _context.Update(organization);
-                    await _context.SaveChangesAsync();
+                    await _organizationRepository.UpdateOrganizationAsync(organization);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!OrganizationExists(organization.Id))
+                    if (!await _organizationRepository.OrganizationExistsAsync(organization.Id))
                     {
                         return NotFound();
                     }
@@ -126,12 +119,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            //var organization = await _context.Organizations
-            //    .FirstOrDefaultAsync(m => m.Id == id);
-            var organization = await _context.Organizations
-                .Include(o => o.Employees) // Load related Employees
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+            var organization = await _organizationRepository.GetOrganizationWithDetailsByIdAsync(id.Value);
             if (organization == null)
             {
                 return NotFound();
@@ -145,26 +133,13 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            //var organization = await _context.Organizations.FindAsync(id);
-            var organization = await _context.Organizations
-                .Include(o => o.Training)
-                .Include(o => o.Employees)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (organization != null)
-            {
-                _context.Employees.RemoveRange(organization.Employees);
-                _context.Trainings.RemoveRange(organization.Training);
-                _context.Organizations.Remove(organization);
-            }
-
-            await _context.SaveChangesAsync();
+            await _organizationRepository.DeleteOrganizationAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool OrganizationExists(int id)
+        private async Task<bool> OrganizationExists(int id)
         {
-            return _context.Organizations.Any(e => e.Id == id);
+            return await _organizationRepository.OrganizationExistsAsync(id);
         }
     }
 }

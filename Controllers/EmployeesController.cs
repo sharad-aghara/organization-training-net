@@ -1,29 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
+using WebApplication1.Interfaces;
 using WebApplication1.Models;
+using WebApplication1.Repository;
 
 namespace WebApplication1.Controllers
 {
     public class EmployeesController : Controller
     {
-        private readonly AppliactionDbContext _context;
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IOrganizationRepository _organizationRepository;
 
-        public EmployeesController(AppliactionDbContext context)
+        public EmployeesController(IEmployeeRepository employeeRepository, IOrganizationRepository organizationRepository)
         {
-            _context = context;
+            _employeeRepository = employeeRepository;
+            _organizationRepository = organizationRepository;
         }
 
         // GET: Employees
         public async Task<IActionResult> Index()
         {
-            var appliactionDbContext = _context.Employees.Include(e => e.Organization);
-            return View(await appliactionDbContext.ToListAsync());
+            var employees = await _employeeRepository.GetAllEmployeesAsync();
+            return View(employees);
         }
 
         // GET: Employees/Details/5
@@ -34,11 +39,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var employee = await _context.Employees
-                .Include(e => e.Organization)
-                .Include(e => e.TrainingEmployees)
-                    .ThenInclude(te => te.Training)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
             if (employee == null)
             {
                 return NotFound();
@@ -48,26 +49,27 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Employees/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name");
+            var organization = await _organizationRepository.GetAllOrganizationsAsync();
+            //ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name");
+            ViewData["OrganizationId"] = new SelectList(organization, "Id", "Name");
             return View();
         }
 
         // POST: Employees/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,OrganizationId")] Employee employee)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(employee);
-                await _context.SaveChangesAsync();
+                await _employeeRepository.AddEmployeeAsync(employee);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", employee.OrganizationId);
+
+            var organizations = await _organizationRepository.GetAllOrganizationsAsync();
+            ViewData["OrganizationId"] = new SelectList(organizations, "Id", "Name", employee.OrganizationId);
             return View(employee);
         }
 
@@ -79,23 +81,24 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
             if (employee == null)
             {
                 return NotFound();
             }
-            //ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", employee.OrganizationId);
-            ViewBag.OrganizationName = _context.Organizations
-                .Where(o => o.Id == employee.OrganizationId)
-                .Select(o => o.Name)
-                .FirstOrDefault();
+
+            var organizationById = await _organizationRepository.GetOrganizationByIdAsync(employee.OrganizationId);
+
+            //ViewBag.OrganizationName = _context.Organizations
+            //    .Where(o => o.Id == employee.OrganizationId)
+            //    .Select(o => o.Name)
+            //    .FirstOrDefault();
+            ViewBag.OrganizationName = organizationById?.Name;
 
             return View(employee);
         }
 
         // POST: Employees/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,OrganizationId")] Employee employee)
@@ -109,12 +112,11 @@ namespace WebApplication1.Controllers
             {
                 try
                 {
-                    _context.Update(employee);
-                    await _context.SaveChangesAsync();
+                    await _employeeRepository.UpdateEmployeeAsync(employee);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!EmployeeExists(employee.Id))
+                    if (!_employeeRepository.EmployeeExists(employee.Id))
                     {
                         return NotFound();
                     }
@@ -125,7 +127,10 @@ namespace WebApplication1.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["OrganizationId"] = new SelectList(_context.Organizations, "Id", "Name", employee.OrganizationId);
+
+            var organization = await _organizationRepository.GetAllOrganizationsAsync();
+
+            ViewData["OrganizationId"] = new SelectList(organization, "Id", "Name", employee.OrganizationId);
             return View(employee);
         }
 
@@ -137,9 +142,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var employee = await _context.Employees
-                .Include(e => e.Organization)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
             if (employee == null)
             {
                 return NotFound();
@@ -153,19 +156,8 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee != null)
-            {
-                _context.Employees.Remove(employee);
-            }
-
-            await _context.SaveChangesAsync();
+            await _employeeRepository.DeleteEmployeeAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool EmployeeExists(int id)
-        {
-            return _context.Employees.Any(e => e.Id == id);
         }
     }
 }
