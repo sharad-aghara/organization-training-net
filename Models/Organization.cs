@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using WebApplication1.Helper;
 
 namespace WebApplication1.Models
 {
