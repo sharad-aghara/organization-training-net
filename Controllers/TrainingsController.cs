@@ -198,23 +198,9 @@ namespace WebApplication1.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-        //
-        //private bool TrainingExists(int id)
-        //{
-        //    return _context.Trainings.Any(e => e.Id == id);
-        //}
-
-
         // Get Employees after selecting Organization
         public async Task<IActionResult> GetEmployeesFromOrganization(int organizationId)
         {
-            //var employees = _context.Employees
-            //    .Where(e => e.OrganizationId == organizationId)
-            //    .Select(e => new { e.Id, e.Name })
-            //    .ToList();
-
-            //return Json(employees);
 
             var employees = await _employeeRepository.GetEmployeesByOrganizationIdAsync(organizationId);
             var employeeList = employees.Select(e => new { e.Id, e.Name }).ToList();
@@ -226,20 +212,6 @@ namespace WebApplication1.Controllers
         {
             return await _employeeRepository.GetAvailableEmployeesAsync(organizationId, trainingDate);
         }
-
-        //
-        //public async Task<IEnumerable<Employee>> GetAvailableEmployees(int organizationId, DateOnly trainingDate)
-        //{
-        //    var engagedEmployeeIds = await _context.TrainingEmployees
-        //        .Where(te => te.Training.TrainingDate == trainingDate)
-        //        .Select(te => te.EmployeeId)
-        //        .ToListAsync();
-
-        //    return await _context.Employees
-        //        .Where(e => e.OrganizationId == organizationId && !engagedEmployeeIds.Contains(e.Id))
-        //        .ToListAsync();
-        //}
-
 
     }
 }
